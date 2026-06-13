@@ -108,8 +108,11 @@
 </div>
 <script>
 /* ======================================================================
-   1) HIER DEINE CAPSULE-TOOL-URL EINTRAGEN (das bezahlte v4)
+   1) BEZAHLSCHRANKE: Link zur Alfima-Checkout-Seite des Capsule-Atelier.
+      Dorthin schickt der Ergebnis-Button. Nach der Zahlung liefert Alfima
+      das eigentliche Tool aus, dessen Adresse steht unten als V4_URL.
    ====================================================================== */
+const CHECKOUT_URL = "https://DEIN-ALFIMA-CHECKOUT-LINK";
 const V4_URL = "https://spiffy-sunshine-20ceee.netlify.app";
 
 const IMG = {
@@ -217,7 +220,7 @@ const SEASON = {
 
 const answers = {};
 let idx = 0;
-const totalSteps = QUESTIONS.length + 2;
+const totalSteps = QUESTIONS.length + 1;
 const stage = document.getElementById("stage");
 const bar = document.getElementById("bar");
 const back = document.getElementById("back");
@@ -229,7 +232,6 @@ function render(){
   setBar();
   if(idx === 0) return renderIntro();
   if(idx <= QUESTIONS.length) return renderQuestion(QUESTIONS[idx-1]);
-  if(idx === QUESTIONS.length + 1) return renderEmail();
   return renderResult();
 }
 function renderIntro(){
@@ -262,26 +264,6 @@ function renderQuestion(qd){
   stage.innerHTML = `<div class="step active"><h2 class="q">${qd.q}</h2>${inner}</div>`;
   stage.querySelectorAll(".opt").forEach(b=> b.onclick = ()=> choose(qd.id, b.dataset.v));
 }
-function renderEmail(){
-  stage.innerHTML = `
-    <div class="step active">
-      <h2 class="q">Wohin schicke ich<br>dein Ergebnis?</h2>
-      <p class="hint">Du bekommst deine Farbjahreszeit und ab und zu eine saisonale Stil-Notiz. Abmelden jederzeit.</p>
-      <!-- ALFIMA: input + Button durch dein Alfima-Lead-Formular ersetzen
-           oder per JS an Alfima senden, bevor weitergeleitet wird. -->
-      <input class="field" id="email" type="email" placeholder="Deine E-Mail" autocomplete="email">
-      <p class="privacy">Deine Daten bleiben bei mir. Kein Verkauf, kein Spam.</p>
-      <button class="cta" id="send">Mein Ergebnis ansehen</button>
-    </div>`;
-  document.getElementById("send").onclick = ()=>{
-    const el = document.getElementById("email");
-    if(!el.value || !el.value.includes("@")){ el.focus(); el.style.borderColor = "#CA6E94"; return; }
-    answers.email = el.value;
-    /* TODO: hier Alfima-Submit einbauen */
-    idx++; render();
-  };
-}
-
 /* ---- Farb-Logik: 4 Saisons aus Temperatur, Helligkeit, Kontrast ----
    Diese Werte kannst du tunen. Plus = warm/tief, Minus = kühl/hell. */
 function scoreColor(){
@@ -312,11 +294,9 @@ function renderResult(){
   const sc = scoreColor();
   const key = seasonOf(sc);
   const S = SEASON[key];
-  const undertone = sc.temp>0?"warm":sc.temp<0?"kuehl":"neutral";
   const formLine = FORM_READ[answers.form]||FORM_READ.unklar;
   const lebenLine = LEBEN_READ[answers.leben]||"";
-  const params = new URLSearchParams({...answers, season:key, undertone, ctemp:sc.temp, cdepth:sc.depth, ccontrast:sc.contrast}).toString();
-  const link = V4_URL + "?" + params;
+  const link = CHECKOUT_URL;
   stage.innerHTML = `
     <div class="step active result">
       <p class="kicker">${S.kicker}</p>
